@@ -1,3 +1,4 @@
+from distutils.util import change_root
 from django.shortcuts import render
 from rest_framework import generics
 # Create your views here.
@@ -18,13 +19,16 @@ class ChatListView(generics.ListAPIView):
 # .order_by("-messages__created_at").distinct()
 
     def get_queryset(self):
+        # Message.objects.filter(read = User.objects.exclude(id = self.request.user.id).filter(chat_id =   ))
+
         return self.queryset.filter(members=self.request.user).annotate(
             # profile image
             profile_image=models.Case(
                 models.When(is_group=True, then=models.F('avatar')),
                 models.When(is_group=False, then=User.objects.exclude(
                     id=self.request.user.id).filter(chat__title=models.OuterRef('title')).values('avatar')[:1]),
-                default=models.Value('None image')
+                default=models.Value('None image'),
+                output_field=models.CharField()
 
             ),
             # profile title
@@ -37,8 +41,13 @@ class ChatListView(generics.ListAPIView):
             ),
             is_unmuted=models.Case(
                 models.When(unmuted=self.request.user, then=True),
-                default= False,
+                default=False,
                 output_field=models.BooleanField()
-            )
+            ),
+            message_count=Message.objects.filter(chat__members=User.objects.get(id=self.request.user.id)).filter(
+                read=User.objects.exclude(id=self.request.user.id)[:1]).count(),
 
-        )
+
+
+
+        ).order_by("-messages__created_at", "-pinned")[:1]

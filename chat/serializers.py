@@ -14,8 +14,9 @@ class ChatListSerializer(serializers.ModelSerializer):
     profile_image = serializers.StringRelatedField()
     profile_title = serializers.StringRelatedField()
     is_unmuted = serializers.BooleanField()
+    is_unread = serializers.IntegerField()
 
     class Meta:
         model = Chat
         fields = ('id', 'last_message', 'last_message_date',
-                  "profile_image", 'profile_title','is_unmuted')
+                  "profile_image", 'profile_title','is_unmuted', 'is_unread')

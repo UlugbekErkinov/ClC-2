@@ -4,6 +4,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.db import models
 from common.models import User
+from datetime import timezone
+from datetime import *
 # Create your models here.
 
 
@@ -17,6 +19,7 @@ class Chat(models.Model):
     unmuted = models.ManyToManyField(User, related_name='user_unmuted')
     is_group = models.BooleanField(default=False)
     is_archived = models.ManyToManyField(User, related_name='user_archived')
+    
 
 
 class Message(models.Model):
