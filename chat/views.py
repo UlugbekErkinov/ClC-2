@@ -6,9 +6,15 @@ from django.db import models
 from chat.models import Chat, Message
 from common.models import User
 from chat import serializers
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+
 
 
 class ChatListView(generics.ListAPIView):
+
+    
     queryset = Chat.objects.all().annotate(
         last_message=Message.objects.filter(
             chat_id=models.OuterRef('id')).order_by('-created_at').values('text')[:1],
@@ -18,7 +24,20 @@ class ChatListView(generics.ListAPIView):
     serializer_class = serializers.ChatListSerializer
 # .order_by("-messages__created_at").distinct()
 
-    def get_queryset(self):
+    def get_queryset(self, request):
+
+        # if request.method == "POST":
+        #     vars["created_ad"] = request.POST.get("desc")
+        # print(vars["created_at"])
+
+        # channel_layer = get_channel_layer()
+        # async_to_sync(channel_layer.group_send)(
+        #     f'chat_{id}',
+        #     {
+        #         'type': 'receive',
+        #         'message': last_message
+        #     }
+        # )
         # Message.objects.filter(read = User.objects.exclude(id = self.request.user.id).filter(chat_id =   ))
 
         return self.queryset.filter(members=self.request.user).annotate(
@@ -44,8 +63,9 @@ class ChatListView(generics.ListAPIView):
                 default=False,
                 output_field=models.BooleanField()
             ),
+            
             message_count=Message.objects.filter(chat__members=User.objects.get(id=self.request.user.id)).filter(
-                read=User.objects.exclude(id=self.request.user.id)[:1]).count(),
+                read=User.objects.exclude(id=self.request.user.id)).count(),
 
 
 

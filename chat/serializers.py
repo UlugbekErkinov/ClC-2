@@ -20,3 +20,6 @@ class ChatListSerializer(serializers.ModelSerializer):
         model = Chat
         fields = ('id', 'last_message', 'last_message_date',
                   "profile_image", 'profile_title','is_unmuted', 'is_unread')
+
+
+

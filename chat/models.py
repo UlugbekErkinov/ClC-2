@@ -6,7 +6,14 @@ from django.db import models
 from common.models import User
 from datetime import timezone
 from datetime import *
+from channels.db import database_sync_to_async
 # Create your models here.
+
+STATUS = (('audio', 'audio'),
+          ('video', 'video'),
+          ('image', 'image'),
+          ('emoji', 'emoji'),
+          ('doument', 'document'))
 
 
 class Chat(models.Model):
@@ -21,14 +28,39 @@ class Chat(models.Model):
     is_archived = models.ManyToManyField(User, related_name='user_archived')
     
 
+class File(models.Model):
+    file = models.FileField()
+    massage = models.CharField(max_length=256, choices=STATUS)
+
 
 class Message(models.Model):
     from_user = models.ForeignKey(User, on_delete=models.CASCADE)
     chat = models.ForeignKey(
         Chat, on_delete=models.CASCADE, related_name="messages")
     text = models.TextField()
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
     read = models.ManyToManyField(User, related_name='user_read')
     created_at = models.DateTimeField(auto_now_add=True)
+
+class Notifications(models.Model):
+    user_sender=models.ForeignKey(User,null=True,blank=True,related_name='user_sender',on_delete=models.CASCADE)
+    user_revoker=models.ForeignKey(User,null=True,blank=True,related_name='user_revoker',on_delete=models.CASCADE)
+    status=models.CharField(max_length=264,null=True,blank=True,default="unread")
+    type_of_notification=models.CharField(max_length=264,null=True,blank=True)
+
+
+@database_sync_to_async
+def get_user(user_id):
+    return User.objects.get(id=user_id)
+    
+
+
+@database_sync_to_async
+def create_notification(receiver, typeof="task_created", status="unread"):
+    notification_to_create = Notifications.objects.create(
+        user_revoker=receiver, type_of_notification=typeof)
+    print('I am here to help')
+    return (notification_to_create.user_revoker.username, notification_to_create.type_of_notification)
 
 
 @receiver(post_save, sender=Message)
